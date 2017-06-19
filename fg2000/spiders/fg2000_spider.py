@@ -14,17 +14,21 @@ from scrapy.spiders import CrawlSpider
 from fg2000.items import Fg2000Item
 
 #simulate browser to get links
-driver = webdriver.Firefox(executable_path=r'geckodriver.exe') #webdriver.Chrome(executable_path=r'chromedriver.exe')
+try:
+    driver = webdriver.Firefox(executable_path=r'geckodriver.exe')
+except:
+    driver = webdriver.Chrome(executable_path=r'chromedriver.exe')
+
 driver.get("https://www.forbes.com/global2000/list/")
 time.sleep(5)
 driver.find_element_by_class_name('continue-button').click()
-time.sleep(15)
+time.sleep(10)
 
 #Expecting Internet speed to be good(atleast 5Mbps) 250 is maximum number of clicks required to see Complete G2000 list
-for i in range(0,250): 
+for i in range(0,10):#250 is max
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     if i<2:
-        time.sleep(15)
+        time.sleep(10)
 data = {
     'Link' : []
 }
@@ -51,7 +55,7 @@ class fg2000Spider(CrawlSpider):
     #def start_requests(self):
     #    url = "https://www.forbes.com/companies/icbc/" #links
     #    yield scrapy.Request(url, self.parse)
-    
+
     def parse(self, response):
         #pagesource = Selector(response)
         names = header = values = num_header = num_values = rnk = cn = tick = ind = fndd = cntry = ceo = ws = emp = sales = hq = ceo_pay = rvnu = assts = prft = prfl = ''
@@ -64,22 +68,22 @@ class fg2000Spider(CrawlSpider):
         m = re.split("\s", names[0], 1)
         rnk = m[0]
         cn = m[1]
-        
+
         try:
             profile_1 = response.xpath("id('left_rail')/div[2]/text()").extract()
             profile_2 = response.xpath("id('left_rail')/div[2]/span/text()").extract()
             prfl = profile_1[0] + profile_2[0]
         except:
             prfl = profile_1[0]
-        
-        
+
+
         for j in range(len(header)):
             if header[j] == "Ticker":
                 tick = values[j]
             if header[j]=="Industry":
                 ind = values[j]
             if header[j] == "Founded":
-                fndd = values[j]                
+                fndd = values[j]
             if header[j] == "Country":
                 cntry = values[j]
             if header[j] == "CEO" or header[j] == "Chief Executive Officer":
@@ -91,10 +95,10 @@ class fg2000Spider(CrawlSpider):
             if header[j] == "Sales":
                 sales = values[j]
             if header[j] == "Headquarters":
-                hq = values[j]                
+                hq = values[j]
             if header[j] == "CEO Compensation":
                 ceo_pay = values[j]
-        
+
         for i in range(len(num_header)):
             if num_header[i] == "Revenue":
                 rvnu = num_values[i]
